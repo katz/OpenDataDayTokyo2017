@@ -1,6 +1,7 @@
 <html>
 <head>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js" integrity="sha256-8E6QUcFg1KTnpEU8TFGhpTGHw5fJqB9vCms3OhAYLqw=" crossorigin="anonymous"></script>
 <script>
 $(function(){
 	if (navigator.geolocation) {
@@ -34,6 +35,34 @@ $(function(){
 							.text(data.results[i].formatted_address)
 							.appendTo('#reverse_result')
 					}
+
+					var filtered = _.find(data.results, function(o){
+						return _.isEqual(o.types.sort(), [ "political", "sublocality", "sublocality_level_3" ].sort())
+					});
+					console.warn(filtered);
+
+					var targetAddress = _.find(filtered.address_components, function(o){
+						return _.isEqual(o.types.sort(), [ "political", "administrative_area_level_1" ].sort()) //東京都
+					}).long_name
+					+
+					_.find(filtered.address_components, function(o){
+						return _.isEqual(o.types.sort(), [ "political", "locality" ].sort()) // xx区
+					}).long_name
+					+
+					_.find(filtered.address_components, function(o){
+						return _.isEqual(o.types.sort(), [ "political", "sublocality", "sublocality_level_1" ].sort()) // ○○
+					}).long_name;
+					
+
+					// x丁目のデータは入っていないことがある（東京都千代田区紀尾井町とかはx丁目という表記がない）
+					var sublocality_level_2 = _.find(filtered.address_components, function(o){
+						return _.isEqual(o.types.sort(), [ "political", "sublocality", "sublocality_level_2" ].sort()) // x丁目
+					})
+					if(sublocality_level_2){
+						targetAddress += sublocality_level_2.long_name;
+					}
+					console.warn(targetAddress)
+
 				}).error(function(data) {
 					alert('error!!!');
 				});
