@@ -150,7 +150,9 @@ $(function(){
 					$("#hazardResult").show();
 				}
 			}).error(function(data) {
-				alert('error!!!');
+				$('#judgment').text('判定できませんでした');
+				$('#page1').hide();
+				$('#page2').show();
 			});
 		})
 		.fail(function(){
