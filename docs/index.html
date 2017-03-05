@@ -26,7 +26,7 @@ $(function(){
 		$.when( hazardDataPromise, getPosition() ).then(function ( regionalHazardLevelData, position ) {
 			regionalHazardLevelData = regionalHazardLevelData[0];
 
-			var reverseGeoCodingApi = 'https://maps.googleapis.com/maps/api/geocode/json?requestType=GetReverseGeocoding&lat=%LAT%&lng=%LNG%&callback=?';
+			var reverseGeoCodingApi = 'https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec?requestType=GetReverseGeocoding&lat=%LAT%&lng=%LNG%&callback=?';
 			reverseGeoCodingApi = reverseGeoCodingApi
 				.replace('%LAT%', position.coords.latitude)
 				.replace('%LNG%', position.coords.longitude)
