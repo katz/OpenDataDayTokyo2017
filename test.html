@@ -1,0 +1,56 @@
+<html>
+<head>
+<script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
+<script>
+$(function(){
+	if (navigator.geolocation) {
+		//Geolocation APIを利用できる環境向けの処理
+		navigator.geolocation.getCurrentPosition(
+			function(position){
+				//success
+				var gl_text = "緯度：" + position.coords.latitude + "<br>";
+				gl_text += "経度：" + position.coords.longitude + "<br>";
+				gl_text += "高度：" + position.coords.altitude + "<br>";
+				gl_text += "緯度・経度の誤差：" + position.coords.accuracy + "<br>";
+				gl_text += "高度の誤差：" + position.coords.altitudeAccuracy + "<br>";
+				gl_text += "方角：" + position.coords.heading + "<br>";
+				gl_text += "速度：" + position.coords.speed + "<br>";
+				document.getElementById("show_result").innerHTML = gl_text;
+
+
+				var url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=%LAT%,%LNG%&key=AIzaSyDkGbtUCNtY8DG7sGQ6s-LZVn-ndeaGF40';
+				url = url
+					.replace('%LAT%', position.coords.latitude)
+					.replace('%LNG%', position.coords.longitude)
+				
+				$.ajax({
+					url: url,
+					dataType: 'json',
+				}).success(function(data) {
+					console.log(data);
+
+					for(var i=0; i<data.results.length; i++){
+						$('<p />')
+							.text(data.results[i].formatted_address)
+							.appendTo('#reverse_result')
+					}
+				}).error(function(data) {
+					alert('error!!!');
+				});
+			},
+			function(){
+				//error
+			}
+		);
+	} else {
+		//Geolocation APIを利用できない環境向けの処理
+	}
+})
+</script>
+</head>
+<body>
+	<p>result</p>
+	<p id="show_result"></p>
+	<div id="reverse_result"></div>
+</body>
+</html>
