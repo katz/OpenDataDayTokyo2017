@@ -8,9 +8,8 @@ $(function(){
 	$('#startOverSafe,#startOverDanger').on('click', function(){
 		var userThinks = $(this).attr('value');
 		//地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)
-		var hazardDataPromise = $.ajax({
-			url: "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec?requestType=GetGazardData",
-			dataType: 'json',
+		var hazardDataPromise = $.getJSON({
+			url: "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec?requestType=GetGazardData&callback=?",
 		})
 
 		var getPosition = function (options) {
@@ -27,14 +26,13 @@ $(function(){
 		$.when( hazardDataPromise, getPosition() ).then(function ( regionalHazardLevelData, position ) {
 			regionalHazardLevelData = regionalHazardLevelData[0];
 
-			var reverseGeoCodingApi = 'https://maps.googleapis.com/maps/api/geocode/json?requestType=GetReverseGeocoding&lat=%LAT%&lng=%LNG%';
+			var reverseGeoCodingApi = 'https://maps.googleapis.com/maps/api/geocode/json?requestType=GetReverseGeocoding&lat=%LAT%&lng=%LNG%&callback=?';
 			reverseGeoCodingApi = reverseGeoCodingApi
 				.replace('%LAT%', position.coords.latitude)
 				.replace('%LNG%', position.coords.longitude)
 			
-			$.ajax({
-				url: reverseGeoCodingApi,
-				dataType: 'json',
+			$.getJSON({
+				url: reverseGeoCodingApi
 			}).success(function(data) {
 				console.log(data);
 
