@@ -23,7 +23,7 @@ $(function(){
 			return deferred.promise();
 		};
 
-		$.when( hazardDataPromise, getPosition() ).done(function ( regionalHazardLevelData, position ) {
+		$.when( hazardDataPromise, getPosition() ).then(function ( regionalHazardLevelData, position ) {
 			regionalHazardLevelData = regionalHazardLevelData[0]
 			console.log( position ); // "Fish"
 			console.log( regionalHazardLevelData ); // "Pizza"
@@ -143,7 +143,12 @@ $(function(){
 			}).error(function(data) {
 				alert('error!!!');
 			});
-		});
+		})
+		.fail(function(){
+			$('#judgment').text('判定できませんでした');
+			$('#page1').hide();
+			$('#page2').show();
+		})
 	})
 })
 </script>
