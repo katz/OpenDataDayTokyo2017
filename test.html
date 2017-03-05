@@ -2,145 +2,216 @@
 <head>
 <script src="https://code.jquery.com/jquery-2.2.4.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/lodash.js/4.17.4/lodash.min.js" integrity="sha256-8E6QUcFg1KTnpEU8TFGhpTGHw5fJqB9vCms3OhAYLqw=" crossorigin="anonymous"></script>
+<!--<script src="https://cdnjs.cloudflare.com/ajax/libs/underscore.js/1.8.3/underscore-min.js" integrity="sha256-obZACiHd7gkOk9iIL/pimWMTJ4W/pBsKu+oZnSeBIek=" crossorigin="anonymous"></script>-->
 <script>
 $(function(){
-	if (navigator.geolocation) {
-		//Geolocation APIを利用できる環境向けの処理
-		navigator.geolocation.getCurrentPosition(
-			function(position){
-				//success
-				var gl_text = "緯度：" + position.coords.latitude + "<br>";
-				gl_text += "経度：" + position.coords.longitude + "<br>";
-				gl_text += "高度：" + position.coords.altitude + "<br>";
-				gl_text += "緯度・経度の誤差：" + position.coords.accuracy + "<br>";
-				gl_text += "高度の誤差：" + position.coords.altitudeAccuracy + "<br>";
-				gl_text += "方角：" + position.coords.heading + "<br>";
-				gl_text += "速度：" + position.coords.speed + "<br>";
-				document.getElementById("show_result").innerHTML = gl_text;
+	$('#startOverSafe,#startOverDanger').on('click', function(){
+		//地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)
+		var hazardDataPromise = $.ajax({
+			url: "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec",
+			dataType: 'json',
+		})
+
+		var getPosition = function (options) {
+			var deferred = $.Deferred();
+
+			navigator.geolocation.getCurrentPosition(
+				deferred.resolve,
+				deferred.reject,
+				options);
+
+			return deferred.promise();
+		};
+
+		$.when( hazardDataPromise, getPosition() ).done(function ( regionalHazardLevelData, position ) {
+			regionalHazardLevelData = regionalHazardLevelData[0]
+			console.log( position ); // "Fish"
+			console.log( regionalHazardLevelData ); // "Pizza"
+
+			//success
+			var gl_text = "緯度：" + position.coords.latitude + "<br>";
+			gl_text += "経度：" + position.coords.longitude + "<br>";
+			gl_text += "高度：" + position.coords.altitude + "<br>";
+			gl_text += "緯度・経度の誤差：" + position.coords.accuracy + "<br>";
+			gl_text += "高度の誤差：" + position.coords.altitudeAccuracy + "<br>";
+			gl_text += "方角：" + position.coords.heading + "<br>";
+			gl_text += "速度：" + position.coords.speed + "<br>";
+			document.getElementById("show_result").innerHTML = gl_text;
 
 
-				var url = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=%LAT%,%LNG%&key=AIzaSyDkGbtUCNtY8DG7sGQ6s-LZVn-ndeaGF40';
-				url = url
-					.replace('%LAT%', position.coords.latitude)
-					.replace('%LNG%', position.coords.longitude)
-				
-				$.ajax({
-					url: url,
-					dataType: 'json',
-				}).success(function(data) {
-					console.log(data);
+			var reverseGeoCodingApi = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=%LAT%,%LNG%&key=AIzaSyDkGbtUCNtY8DG7sGQ6s-LZVn-ndeaGF40';
+			reverseGeoCodingApi = reverseGeoCodingApi
+				.replace('%LAT%', position.coords.latitude)
+				.replace('%LNG%', position.coords.longitude)
+			
+			$.ajax({
+				url: reverseGeoCodingApi,
+				dataType: 'json',
+			}).success(function(data) {
+				console.log(data);
 
-					for(var i=0; i<data.results.length; i++){
-						$('<p />')
-							.text(data.results[i].formatted_address)
-							.appendTo('#reverse_result')
-					}
+				for(var i=0; i<data.results.length; i++){
+					$('<p />')
+						.text(data.results[i].formatted_address)
+						.appendTo('#reverse_result')
+				}
 
-					var filtered = _.find(data.results, function(o){
-						return _.isEqual(o.types.sort(), [ "political", "sublocality", "sublocality_level_3" ].sort())
-					});
-					console.warn(filtered);
+				console.log('data.results', data.results)
+				var filtered = _.find(data.results, function(o){
+					var typeToCompate = o.types.sort();
+					console.log(typeToCompate,
+						_.difference(typeToCompate, [ "political", "sublocality", "sublocality_level_1" ]).length,
+						_.difference(typeToCompate, [ "political", "sublocality", "sublocality_level_2" ]).length,
+						_.difference(typeToCompate, [ "political", "sublocality", "sublocality_level_3" ]).length
+					)
+					var compareResult = (_.difference(typeToCompate, [ "political", "sublocality", "sublocality_level_1" ]).length == 0)
+						|| (_.difference(typeToCompate, [ "political", "sublocality", "sublocality_level_2" ]).length == 0) // ○○
+						|| (_.difference(typeToCompate, [ "political", "sublocality", "sublocality_level_3" ]).length == 0) // ○○
 
-					var targetAddress = _.find(filtered.address_components, function(o){
-						return _.isEqual(o.types.sort(), [ "political", "administrative_area_level_1" ].sort()) //東京都
-					}).long_name
-					+
-					_.find(filtered.address_components, function(o){
-						return _.isEqual(o.types.sort(), [ "political", "locality" ].sort()) // xx区
-					}).long_name
-					+
-					_.find(filtered.address_components, function(o){
-						return _.isEqual(o.types.sort(), [ "political", "sublocality", "sublocality_level_1" ].sort()) // ○○
-					}).long_name;
+					console.log('compareResult', compareResult);
 					
-
-					// x丁目のデータは入っていないことがある（東京都千代田区紀尾井町とかはx丁目という表記がない）
-					var sublocality_level_2 = _.find(filtered.address_components, function(o){
-						return _.isEqual(o.types.sort(), [ "political", "sublocality", "sublocality_level_2" ].sort()) // x丁目
-					})
-					if(sublocality_level_2){
-						targetAddress += sublocality_level_2.long_name;
-					}
-					console.warn(targetAddress)
-
-					//地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)
-					$.ajax({
-						url: "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec",
-						dataType: 'json',
-					}).success(function(regionalHazardLevelData) {
-						// console.warn(regionalHazardLevelData)
-						var hazardLevelData = _.find(regionalHazardLevelData, function(o){
-							return o.key == targetAddress
-						})
-						console.warn(hazardLevelData);
-
-						var dataKeyToId ={
-							"建物倒壊危険度 ランク": "collapseHazardRank",
-							"建物倒壊危険度 順位": "collapseHazardRating",
-							"火災危険度 ランク": "fireHazardRank",
-							"火災危険度 順位": "fireHazardRating",
-							"総合危険度 ランク": "totalHazardRank",
-							"総合危険度 順位": "totalHazardRating",
-						}
-						for(var dataKey in dataKeyToId){
-							console.log( hazardLevelData[dataKey] )
-							$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
-						}
-						$("#hazardResult").show();
-					});
-
-				}).error(function(data) {
-					alert('error!!!');
+					return compareResult;
 				});
-			},
-			function(){
-				//error
-			}
-		);
-	} else {
-		//Geolocation APIを利用できない環境向けの処理
-	}
+				console.warn('filtered', filtered);
+				console.warn('filtered.address_components', filtered.address_components);
+
+				var targetAddress = _.find(filtered.address_components, function(o){
+					return _.difference(o.types, [ "political", "administrative_area_level_1" ]).length==0 //東京都
+				}).long_name
+				+
+				_.find(filtered.address_components, function(o){
+					return _.difference(o.types, [ "political", "locality" ]).length==0 // xx区
+				}).long_name
+				;
+
+				var sublocality_level_1 = _.find(filtered.address_components, function(o){
+					console.warn('o.types', o.types, [ "political", "sublocality", "sublocality_level_1" ], _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]), _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length, _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length==0);
+					var compareResult = _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length==0;
+					return compareResult; // ○○
+				});
+				console.log('sublocality_level_1', sublocality_level_1)
+				if(sublocality_level_1){
+					targetAddress += sublocality_level_1.long_name;
+				}
+				
+
+				// x丁目のデータは入っていないことがある（東京都千代田区紀尾井町とかはx丁目という表記がない）
+				var sublocality_level_2 = _.find(filtered.address_components, function(o){
+					return _.difference(o.types, [ "political", "sublocality", "sublocality_level_2" ]).length==0 // x丁目
+				})
+				if(sublocality_level_2){
+					targetAddress += sublocality_level_2.long_name;
+				}
+				console.warn(targetAddress)
+
+				console.log('regionalHazardLevelData')
+				console.log(regionalHazardLevelData)	
+				var hazardLevelData = _.find(regionalHazardLevelData, function(o){
+					var compareResult = o.key == targetAddress;
+					return compareResult;
+				})
+				console.warn(hazardLevelData);
+
+				if(parseInt(hazardLevelData.data['総合危険度 ランク']) == 1){
+					//ランク1なら安全
+					$("#judgment").text("安全です")
+				}else if(parseInt(hazardLevelData.data['総合危険度 ランク']) == 2){
+					//ランク2は注意が必要
+					$("#judgment").text("注意が必要です")
+				}else{
+					//それ以外は危険
+					$("#judgment").text("危ないです")
+				}
+				$('#page1').hide();
+				$('#page2').show();
+
+				var dataKeyToId ={
+					"建物倒壊危険度 ランク": "collapseHazardRank",
+					"建物倒壊危険度 順位": "collapseHazardRating",
+					"火災危険度 ランク": "fireHazardRank",
+					"火災危険度 順位": "fireHazardRating",
+					"総合危険度 ランク": "totalHazardRank",
+					"総合危険度 順位": "totalHazardRating",
+				}
+				for(var dataKey in dataKeyToId){
+					console.log( hazardLevelData[dataKey] )
+					$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
+				}
+				$("#hazardResult").show();
+				
+
+			}).error(function(data) {
+				alert('error!!!');
+			});
+		});
+	})
 })
 </script>
 <style type="text/css">
 #hazardResult{
 	display: none;
 }
+
+#page2{
+	display: none;
+}
 </style>
 </head>
 <body>
-	<p>result</p>
-	<p id="show_result"></p>
-	<div id="reverse_result"></div>
+	<div id="page1">
+		<h1>いま災害が起きたら、あなたが今いる場所は、危ないと思いますか？</h1>
+		<form>
+			<button type="button" id="startOverSafe">安全</button>
+			<button type="button" id="startOverDanger">危ない</button>
+		</form>
+		<p>
+			<a href="http://www.metro.tokyo.jp/SUB/OPENDATA/">東京都オープンデータ</a>の「地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)」を元に、あなたのいま居る所の安全性を判定します。<br />
+			利用に当たっては、次のデータを取得します。
+			<ul>
+				<li>GEO情報</li>
+				<li>ブラウザのヘッダ情報</li>
+			</ul>
+		</p>
+	</div>
+	<div id="page2">
+		<h1 id="judgment"></h1>
+		<p>皆さんのまちの地震の危険性を分かりやすく示すために、地震の揺れによる建物倒壊や火災の危険性に、避難や消火・救助など、各種の災害対応活動の困難さを加味して一つの指標にまとめたものが「災害時活動困難度を考慮した総合危険度」です。<br />
+災害時の避難や消火・救助活動などを支援する空間として、道路が重要な役割を果たすという視点から、防災都市づくりや道路整備の指標となるとともに、都民がまちの地震災害への対応のしやすさ(困難さ)を考え、地震に対する備えに活用されることを想定しています。
+		</p>
+		<p><a href="http://www.toshiseibi.metro.tokyo.jp/bosai/chousa_6/home.htm">詳しくはこのページに</a></p>
 
-	<div id="hazardResult">
-		<p>危険度データ</p>
-		<table>
-			<tr>
-				<th>建物倒壊危険度 ランク</th>
-				<td id="collapseHazardRank"></td>
-			</tr>
-			<tr>
-				<th>建物倒壊危険度 順位</th>
-				<td id="collapseHazardRating"></td>
-			</tr>
-			<tr>
-				<th>火災危険度 ランク</th>
-				<td id="fireHazardRank"></td>
-			</tr>
-			<tr>
-				<th>火災危険度 順位</th>
-				<td id="fireHazardRating"></td>
-			</tr>
-			<tr>
-				<th>総合危険度 ランク</th>
-				<td id="totalHazardRank"></td>
-			</tr>
-			<tr>
-				<th>総合危険度 順位</th>
-				<td id="totalHazardRating"></td>
-			</tr>
-		</table>
+		<p id="show_result"></p>
+		<div id="reverse_result"></div>
+
+		<div id="hazardResult">
+			<p>危険度データ</p>
+			<table>
+				<tr>
+					<th>建物倒壊危険度 ランク</th>
+					<td id="collapseHazardRank"></td>
+				</tr>
+				<tr>
+					<th>建物倒壊危険度 順位</th>
+					<td id="collapseHazardRating"></td>
+				</tr>
+				<tr>
+					<th>火災危険度 ランク</th>
+					<td id="fireHazardRank"></td>
+				</tr>
+				<tr>
+					<th>火災危険度 順位</th>
+					<td id="fireHazardRating"></td>
+				</tr>
+				<tr>
+					<th>総合危険度 ランク</th>
+					<td id="totalHazardRank"></td>
+				</tr>
+				<tr>
+					<th>総合危険度 順位</th>
+					<td id="totalHazardRating"></td>
+				</tr>
+			</table>
+		</div>
 	</div>
 </body>
 </html>
