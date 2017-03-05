@@ -63,6 +63,32 @@ $(function(){
 					}
 					console.warn(targetAddress)
 
+					//地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)
+					$.ajax({
+						url: "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec",
+						dataType: 'json',
+					}).success(function(regionalHazardLevelData) {
+						// console.warn(regionalHazardLevelData)
+						var hazardLevelData = _.find(regionalHazardLevelData, function(o){
+							return o.key == targetAddress
+						})
+						console.warn(hazardLevelData);
+
+						var dataKeyToId ={
+							"建物倒壊危険度 ランク": "collapseHazardRank",
+							"建物倒壊危険度 順位": "collapseHazardRating",
+							"火災危険度 ランク": "fireHazardRank",
+							"火災危険度 順位": "fireHazardRating",
+							"総合危険度 ランク": "totalHazardRank",
+							"総合危険度 順位": "totalHazardRating",
+						}
+						for(var dataKey in dataKeyToId){
+							console.log( hazardLevelData[dataKey] )
+							$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
+						}
+						$("#hazardResult").show();
+					});
+
 				}).error(function(data) {
 					alert('error!!!');
 				});
@@ -76,10 +102,45 @@ $(function(){
 	}
 })
 </script>
+<style type="text/css">
+#hazardResult{
+	display: none;
+}
+</style>
 </head>
 <body>
 	<p>result</p>
 	<p id="show_result"></p>
 	<div id="reverse_result"></div>
+
+	<div id="hazardResult">
+		<p>危険度データ</p>
+		<table>
+			<tr>
+				<th>建物倒壊危険度 ランク</th>
+				<td id="collapseHazardRank"></td>
+			</tr>
+			<tr>
+				<th>建物倒壊危険度 順位</th>
+				<td id="collapseHazardRating"></td>
+			</tr>
+			<tr>
+				<th>火災危険度 ランク</th>
+				<td id="fireHazardRank"></td>
+			</tr>
+			<tr>
+				<th>火災危険度 順位</th>
+				<td id="fireHazardRating"></td>
+			</tr>
+			<tr>
+				<th>総合危険度 ランク</th>
+				<td id="totalHazardRank"></td>
+			</tr>
+			<tr>
+				<th>総合危険度 順位</th>
+				<td id="totalHazardRating"></td>
+			</tr>
+		</table>
+	</div>
 </body>
 </html>
