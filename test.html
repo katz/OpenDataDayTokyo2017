@@ -75,71 +75,80 @@ $(function(){
 				console.warn('filtered', filtered);
 				console.warn('filtered.address_components', filtered.address_components);
 
-				var targetAddress = _.find(filtered.address_components, function(o){
+
+				var administrative_area_level_1 = _.find(filtered.address_components, function(o){
 					return _.difference(o.types, [ "political", "administrative_area_level_1" ]).length==0 //東京都
-				}).long_name
-				+
-				_.find(filtered.address_components, function(o){
-					return _.difference(o.types, [ "political", "locality" ]).length==0 // xx区
-				}).long_name
-				;
-
-				var sublocality_level_1 = _.find(filtered.address_components, function(o){
-					console.warn('o.types', o.types, [ "political", "sublocality", "sublocality_level_1" ], _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]), _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length, _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length==0);
-					var compareResult = _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length==0;
-					return compareResult; // ○○
 				});
-				console.log('sublocality_level_1', sublocality_level_1)
-				if(sublocality_level_1){
-					targetAddress += sublocality_level_1.long_name;
-				}
-				
-
-				// x丁目のデータは入っていないことがある（東京都千代田区紀尾井町とかはx丁目という表記がない）
-				var sublocality_level_2 = _.find(filtered.address_components, function(o){
-					return _.difference(o.types, [ "political", "sublocality", "sublocality_level_2" ]).length==0 // x丁目
-				})
-				if(sublocality_level_2){
-					targetAddress += sublocality_level_2.long_name;
-				}
-				console.warn(targetAddress)
-
-				console.log('regionalHazardLevelData')
-				console.log(regionalHazardLevelData)	
-				var hazardLevelData = _.find(regionalHazardLevelData, function(o){
-					var compareResult = o.key == targetAddress;
-					return compareResult;
-				})
-				console.warn(hazardLevelData);
-
-				if(parseInt(hazardLevelData.data['総合危険度 ランク']) == 1){
-					//ランク1なら安全
-					$("#judgment").text("安全です")
-				}else if(parseInt(hazardLevelData.data['総合危険度 ランク']) == 2){
-					//ランク2は注意が必要
-					$("#judgment").text("注意が必要です")
+				if(administrative_area_level_1.long_name != '東京都'){
+					//東京都だけ対応している
+					$('#judgment').text('東京都のみ利用できます');
+					$('#page1').hide();
+					$('#page2').show();
 				}else{
-					//それ以外は危険
-					$("#judgment").text("危ないです")
-				}
-				$('#page1').hide();
-				$('#page2').show();
+					var targetAddress = _.find(filtered.address_components, function(o){
+						return _.difference(o.types, [ "political", "administrative_area_level_1" ]).length==0 //東京都
+					}).long_name
+					+
+					_.find(filtered.address_components, function(o){
+						return _.difference(o.types, [ "political", "locality" ]).length==0 // xx区
+					}).long_name
+					;
 
-				var dataKeyToId ={
-					"建物倒壊危険度 ランク": "collapseHazardRank",
-					"建物倒壊危険度 順位": "collapseHazardRating",
-					"火災危険度 ランク": "fireHazardRank",
-					"火災危険度 順位": "fireHazardRating",
-					"総合危険度 ランク": "totalHazardRank",
-					"総合危険度 順位": "totalHazardRating",
-				}
-				for(var dataKey in dataKeyToId){
-					console.log( hazardLevelData[dataKey] )
-					$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
-				}
-				$("#hazardResult").show();
-				
+					var sublocality_level_1 = _.find(filtered.address_components, function(o){
+						console.warn('o.types', o.types, [ "political", "sublocality", "sublocality_level_1" ], _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]), _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length, _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length==0);
+						var compareResult = _.difference(o.types, [ "political", "sublocality", "sublocality_level_1" ]).length==0;
+						return compareResult; // ○○
+					});
+					console.log('sublocality_level_1', sublocality_level_1)
+					if(sublocality_level_1){
+						targetAddress += sublocality_level_1.long_name;
+					}
+					
 
+					// x丁目のデータは入っていないことがある（東京都千代田区紀尾井町とかはx丁目という表記がない）
+					var sublocality_level_2 = _.find(filtered.address_components, function(o){
+						return _.difference(o.types, [ "political", "sublocality", "sublocality_level_2" ]).length==0 // x丁目
+					})
+					if(sublocality_level_2){
+						targetAddress += sublocality_level_2.long_name;
+					}
+					console.warn(targetAddress)
+
+					console.log('regionalHazardLevelData')
+					console.log(regionalHazardLevelData)	
+					var hazardLevelData = _.find(regionalHazardLevelData, function(o){
+						var compareResult = o.key == targetAddress;
+						return compareResult;
+					})
+					console.warn(hazardLevelData);
+
+					if(parseInt(hazardLevelData.data['総合危険度 ランク']) == 1){
+						//ランク1なら安全
+						$("#judgment").text("安全です")
+					}else if(parseInt(hazardLevelData.data['総合危険度 ランク']) == 2){
+						//ランク2は注意が必要
+						$("#judgment").text("注意が必要です")
+					}else{
+						//それ以外は危険
+						$("#judgment").text("危ないです")
+					}
+					$('#page1').hide();
+					$('#page2').show();
+
+					var dataKeyToId ={
+						"建物倒壊危険度 ランク": "collapseHazardRank",
+						"建物倒壊危険度 順位": "collapseHazardRating",
+						"火災危険度 ランク": "fireHazardRank",
+						"火災危険度 順位": "fireHazardRating",
+						"総合危険度 ランク": "totalHazardRank",
+						"総合危険度 順位": "totalHazardRating",
+					}
+					for(var dataKey in dataKeyToId){
+						console.log( hazardLevelData[dataKey] )
+						$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
+					}
+					$("#hazardResult").show();
+				}
 			}).error(function(data) {
 				alert('error!!!');
 			});
