@@ -148,6 +148,16 @@ $(function(){
 						$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
 					}
 					$("#hazardResult").show();
+
+					// send data to Google Sheet
+					var userLang = navigator.language || navigator.userLanguage;
+					$.post( "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec", {
+						lat: position.coords.latitude,
+						lng : position.coords.longitude,
+						browserLang: userLang,
+						address: targetAddress,
+						rank: parseInt(hazardLevelData.data['総合危険度 ランク'])
+					} );
 				}
 			}).error(function(data) {
 				$('#judgment').text('判定できませんでした');
