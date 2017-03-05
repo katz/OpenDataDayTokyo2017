@@ -6,6 +6,7 @@
 <script>
 $(function(){
 	$('#startOverSafe,#startOverDanger').on('click', function(){
+		var userThinks = $(this).attr('value');
 		//地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)
 		var hazardDataPromise = $.ajax({
 			url: "https://script.google.com/macros/s/AKfycbwZQ0HfF0S1QzYxXn4KVPy1hgNBfIftdu24Gmu0s4ykY1YzkiDc/exec",
@@ -132,6 +133,9 @@ $(function(){
 						//それ以外は危険
 						$("#judgment").text("危ないです")
 					}
+
+					$('#targetAddress').text(targetAddress);
+
 					$('#page1').hide();
 					$('#page2').show();
 
@@ -156,7 +160,8 @@ $(function(){
 						lng : position.coords.longitude,
 						browserLang: userLang,
 						address: targetAddress,
-						rank: parseInt(hazardLevelData.data['総合危険度 ランク'])
+						rank: parseInt(hazardLevelData.data['総合危険度 ランク']),
+						userThinks: userThinks
 					} );
 				}
 			}).error(function(data) {
@@ -187,8 +192,8 @@ $(function(){
 	<div id="page1">
 		<h1>いま災害が起きたら、あなたが今いる場所は、危ないと思いますか？</h1>
 		<form>
-			<button type="button" id="startOverSafe">安全</button>
-			<button type="button" id="startOverDanger">危ない</button>
+			<button type="button" id="startOverSafe" value="userThinksSafe">安全</button>
+			<button type="button" id="startOverDanger" value="userThinksDanger">危ない</button>
 		</form>
 		<p>
 			<a href="http://www.metro.tokyo.jp/SUB/OPENDATA/">東京都オープンデータ</a>の「地震に関する地域危険度測定調査（第7回）地域危険度一覧(平成25年9月公表)」を元に、あなたのいま居る所の安全性を判定します。<br />
@@ -201,6 +206,7 @@ $(function(){
 	</div>
 	<div id="page2">
 		<h1 id="judgment"></h1>
+		<p>今いる場所: <span id="targetAddress"></span></p>
 		<p>皆さんのまちの地震の危険性を分かりやすく示すために、地震の揺れによる建物倒壊や火災の危険性に、避難や消火・救助など、各種の災害対応活動の困難さを加味して一つの指標にまとめたものが「災害時活動困難度を考慮した総合危険度」です。<br />
 災害時の避難や消火・救助活動などを支援する空間として、道路が重要な役割を果たすという視点から、防災都市づくりや道路整備の指標となるとともに、都民がまちの地震災害への対応のしやすさ(困難さ)を考え、地震に対する備えに活用されることを想定しています。
 		</p>
