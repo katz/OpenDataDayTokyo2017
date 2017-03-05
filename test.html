@@ -25,20 +25,7 @@ $(function(){
 		};
 
 		$.when( hazardDataPromise, getPosition() ).then(function ( regionalHazardLevelData, position ) {
-			regionalHazardLevelData = regionalHazardLevelData[0]
-			console.log( position ); // "Fish"
-			console.log( regionalHazardLevelData ); // "Pizza"
-
-			//success
-			var gl_text = "緯度：" + position.coords.latitude + "<br>";
-			gl_text += "経度：" + position.coords.longitude + "<br>";
-			gl_text += "高度：" + position.coords.altitude + "<br>";
-			gl_text += "緯度・経度の誤差：" + position.coords.accuracy + "<br>";
-			gl_text += "高度の誤差：" + position.coords.altitudeAccuracy + "<br>";
-			gl_text += "方角：" + position.coords.heading + "<br>";
-			gl_text += "速度：" + position.coords.speed + "<br>";
-			document.getElementById("show_result").innerHTML = gl_text;
-
+			regionalHazardLevelData = regionalHazardLevelData[0];
 
 			var reverseGeoCodingApi = 'https://maps.googleapis.com/maps/api/geocode/json?latlng=%LAT%,%LNG%&key=AIzaSyDkGbtUCNtY8DG7sGQ6s-LZVn-ndeaGF40';
 			reverseGeoCodingApi = reverseGeoCodingApi
@@ -50,12 +37,6 @@ $(function(){
 				dataType: 'json',
 			}).success(function(data) {
 				console.log(data);
-
-				for(var i=0; i<data.results.length; i++){
-					$('<p />')
-						.text(data.results[i].formatted_address)
-						.appendTo('#reverse_result')
-				}
 
 				console.log('data.results', data.results)
 				var filtered = _.find(data.results, function(o){
@@ -151,7 +132,6 @@ $(function(){
 						console.log( hazardLevelData[dataKey] )
 						$('#'+dataKeyToId[dataKey]).text(hazardLevelData.data[dataKey])
 					}
-					$("#hazardResult").show();
 
 					// send data to Google Sheet
 					var userLang = navigator.language || navigator.userLanguage;
@@ -179,10 +159,6 @@ $(function(){
 })
 </script>
 <style type="text/css">
-#hazardResult{
-	display: none;
-}
-
 #page2{
 	display: none;
 }
@@ -207,14 +183,6 @@ $(function(){
 	<div id="page2">
 		<h1 id="judgment"></h1>
 		<p>今いる場所: <span id="targetAddress"></span></p>
-		<p>皆さんのまちの地震の危険性を分かりやすく示すために、地震の揺れによる建物倒壊や火災の危険性に、避難や消火・救助など、各種の災害対応活動の困難さを加味して一つの指標にまとめたものが「災害時活動困難度を考慮した総合危険度」です。<br />
-災害時の避難や消火・救助活動などを支援する空間として、道路が重要な役割を果たすという視点から、防災都市づくりや道路整備の指標となるとともに、都民がまちの地震災害への対応のしやすさ(困難さ)を考え、地震に対する備えに活用されることを想定しています。
-		</p>
-		<p><a href="http://www.toshiseibi.metro.tokyo.jp/bosai/chousa_6/home.htm">詳しくはこのページに</a></p>
-
-		<p id="show_result"></p>
-		<div id="reverse_result"></div>
-
 		<div id="hazardResult">
 			<p>危険度データ</p>
 			<table>
@@ -244,6 +212,10 @@ $(function(){
 				</tr>
 			</table>
 		</div>
+		<p>皆さんのまちの地震の危険性を分かりやすく示すために、地震の揺れによる建物倒壊や火災の危険性に、避難や消火・救助など、各種の災害対応活動の困難さを加味して一つの指標にまとめたものが「災害時活動困難度を考慮した総合危険度」です。<br />
+災害時の避難や消火・救助活動などを支援する空間として、道路が重要な役割を果たすという視点から、防災都市づくりや道路整備の指標となるとともに、都民がまちの地震災害への対応のしやすさ(困難さ)を考え、地震に対する備えに活用されることを想定しています。
+		</p>
+		<p><a href="http://www.toshiseibi.metro.tokyo.jp/bosai/chousa_6/home.htm">詳しくはこのページに</a></p>
 	</div>
 </body>
 </html>
